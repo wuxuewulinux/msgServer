@@ -1,0 +1,501 @@
+
+//注册登录模块为标准书写
+
+
+
+import "DBmsg.proto";	//引用要保存到数据库结构的proto文件，该文件保存大量的各个模块的数据结构
+
+///////////////////////////////////////////注册登录模块///////////////////////////////////////////////////////////
+enum CSRegisterLoginCmd
+{
+	//填写每个模块的子功能枚举ID号
+	
+	CSRegisterLoginCmd_Register = 1;  			//注册功能
+	CSRegisterLoginCmd_Login = 2;	  			//登录功能
+	CSRegisterLoginCmd_Quit = 3;				//退出游戏功能 (重点)退出有两种情况:1.一种是还没有登录角色进游戏，2.一种是已经登陆角色在游戏 . 如果还没有登录角色退出就要给UID赋值为 0传到传到服务器
+}
+
+message CSLoginReq								//登陆		
+{
+	optional string account = 1; 				//账号
+	optional string password = 2;				//密码
+}
+
+message CSLoginRsp								//登陆		
+{
+	optional uint32 type = 1;					//返回：1表示账号和密码错误，2表示有人在登陆，3表示登陆成功
+	optional DBRoleInfo Role = 2;				//role结构体，该结构体是保存所有模块的结构体和基本人物属性信息
+}
+
+message CSRegisterReq								//注册 		
+{
+	optional string account = 1; 				//账号
+	optional string password = 2;				//密码
+	optional string name = 3;					//名称
+}
+
+message CSRegisterRsp								//注册 		
+{
+	optional uint32 type = 1;					//返回：1表示账号已存在，2表示名称已存在，3表示注册成功
+}
+
+message CSQuitReq
+{
+	optional uint32 pad = 1;					//退出，不需要填，客户端填个0就可以
+}
+
+message CSRegisterLoginReqParam
+{
+
+ //该模块所有子功能的数据都保存在这里，（服务器需要的数据)
+ 
+	optional CSLoginReq LoginReq = 1;
+	optional CSRegisterReq RegisterReq = 2;
+	optional CSQuitReq QuitReq = 3;
+}
+
+
+message CSRegisterLoginRspParam
+{
+
+   //该模块所有子功能的数据都保存在这里，（客户端需要的数据)
+	optional CSLoginRsp LoginRsp = 1;
+	optional CSRegisterRsp RegisterRsp = 2;
+}
+
+
+message CSRegisterLoginReq	//把模块所有结果或者数据整合起来（服务器需要的)
+{
+	required CSRegisterLoginCmd  cmd = 1;						//模块功能的ID号
+	optional CSRegisterLoginReqParam reqParam = 2;			//模块的所有子功能结构体数据都保存在该结果中
+}
+
+
+message CSRegisterLoginRsp									//把模块所有结果或者数据整合起来（客户端需要的)
+{
+	optional int32 result = 1;								//模块的错误码提示（只有客户端才多一个错误码)
+	required CSRegisterLoginCmd cmd = 2;  						//模块功能的ID号
+	optional CSRegisterLoginRspParam rspParam = 3 ;  			//模块的所有子功能结构体数据都保存在该结果中
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////注册登录模块///////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////背包模块/////////////////////////////////////////////////////////////////
+
+enum CSBagCmd
+{
+	//填写每个模块的子功能枚举ID号
+	
+	CSBagCmd_Fetch = 1;								//背包界面展现功能 
+	CSBagCmd_Use = 2;								//背包物品使用功能		  				
+}
+
+message CSBagFetchReq
+{
+	optional uint32 pad = 1 ; 						//填充字段，不需要填.客户端填0就可以了
+}
+
+message CSBagGridInfo
+{
+	optional uint32	ItemId = 1; 					//物品ID
+	optional uint32 Num = 2; 						//物品数量
+}
+
+message CSBagBagInfo
+{
+	repeated CSBagGridInfo GridInfo = 1; 			//物品
+}
+
+message CSBagFetchRsp
+{
+	optional CSBagBagInfo BagInfo = 1; 				// 背包
+}
+
+message CSBagUseReq									//物品使用功能
+{
+	optional uint32 ItemId = 1; 					//使用的物品ID
+	optional uint32 ItemNum = 2; 					//使用的物品数量
+	optional uint32 PickedId = 3; 					//针对特殊宝箱 选择的ID，该字段留给以后的特殊物品使用会用到。
+}
+
+message CSItemInfo
+{
+	optional int32 ID = 1;  						//物品ID，包括 金币， 石头等资源类
+	optional int32 num  = 2; 						// 物品数量
+}
+
+message CSItemInfoList
+{
+	repeated CSItemInfo ItemInfo = 1;  
+}
+
+message CSBagUseRsp									//物品使用功能
+{
+	optional CSItemInfoList ItemInfoList = 1; 		// 返回背包列表
+}
+
+message CSBagReqParam
+{
+	optional CSBagFetchReq FetchReq = 1 ;
+	optional CSBagUseReq UseReq = 2;
+}
+
+message CSBagRspParam
+{
+	optional CSBagFetchRsp FetchRsp = 1 ;
+	optional CSBagUseRsp UseRsp = 2;
+}
+
+message CSBagReq
+{
+	required CSBagCmd cmd = 1 ;
+	optional CSBagReqParam reqParam = 2;
+}
+
+message CSBagRsp
+{
+	optional int32 result = 1 ;								
+	required CSBagCmd cmd = 2 ;
+	optional CSBagRspParam  rspParam = 3 ;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////背包模块///////////////////////////////////////////////////////////////////
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////装饰背包模块/////////////////////////////////////////////////////////////////
+
+enum CSDecorateBagCmd
+{
+	//填写每个模块的子功能枚举ID号
+	
+	CSDecorateBagCmd_Fetch = 1;								//装饰背包界面展现功能 
+	CSDecorateBagCmd_ShowSet = 2;							//装饰背包显示设置物品装饰
+	CSDecorateBagCmd_VipFetch = 3;							//VIP装饰背包界面展现功能
+			  				
+}
+
+message CSDecorateBagFetchReq
+{
+	optional uint32 type = 1 ; 						//装饰背包类型，因为有很多不同种类的装饰背包
+}
+
+message CSDecorateBagGridInfo
+{
+	optional uint32	ItemId = 1; 					//装饰物品ID
+	optional uint32 type = 2; 						//装饰背包的种类
+	optional uint64 EndTime = 3;					//装饰物品的结束时间
+}
+
+message CSDecorateBagInfo
+{
+	repeated CSDecorateBagGridInfo DecorateGridInfo = 1; 			
+}
+
+message CSDecorateBagFetchRsp
+{
+	optional uint32 type = 1;			//装饰背包类型，因为有很多不同种类的装饰背包
+	optional uint32 id = 2;				//背包默认显示的装饰ID物品，界面肯定会告诉用户他选择什么
+	optional CSDecorateBagInfo DecorateBagInfo = 3; 				
+}
+
+message CSDecorateBagShowSetReq
+{
+	optional uint32 Type = 1;			//装饰背包类型 
+	optional uint32 id = 2;				//该装饰背包的物品ID号，玩家要使用该物品装饰为默认特效
+}
+
+
+message CSDecorateBagVIPFetchReq
+{
+	optional uint32 type = 1 ; 						//VIP装饰背包类型，肯定为 1 因为VIP背包类型为1
+}
+
+message CSDecorateBagVIPItem
+{
+	optional uint32 VipGrade = 1;				//VIP等级
+	optional uint32 VipExper = 2;				//VIP经验
+}
+
+message CSDecorateBagVIPList
+{
+	repeated CSDecorateBagVIPItem VIPItemList = 1;
+}
+
+message CSDecorateBagVIPFetchRsp
+{
+	optional uint32 type = 1;			//装饰背包类型，因为有很多不同种类的装饰背包
+	optional uint32 id = 2;				//背包默认显示的装饰ID物品，界面肯定会告诉用户他选择什么
+	optional CSDecorateBagInfo DecorateBagInfo = 3; 
+	optional CSDecorateBagVIPList VipList = 4;			//该字段保存所有VIP等级和经验
+}
+
+message CSDecorateBagReqParam
+{
+	optional CSDecorateBagFetchReq FetchReq = 1 ;
+	optional CSDecorateBagShowSetReq ShowSetReq = 2;
+	optional CSDecorateBagVIPFetchReq VIPFetchReq = 3;
+}
+
+message CSDecorateBagRspParam
+{
+	optional CSDecorateBagFetchRsp FetchRsp = 1 ;
+	optional CSDecorateBagVIPFetchRsp VIPFetchRsp = 2;
+}
+
+message CSDecorateBagReq
+{
+	required CSDecorateBagCmd cmd = 1 ;
+	optional CSDecorateBagReqParam reqParam = 2;
+}
+
+message CSDecorateBagRsp
+{
+	optional int32 result = 1 ;								
+	required CSDecorateBagCmd cmd = 2 ;
+	optional CSDecorateBagRspParam  rspParam = 3 ;
+}
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////装饰背包模块/////////////////////////////////////////////////////////////////
+
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////聊天模块//////////////////////////////////////////////////////////////////////
+
+message FriendList					//该字段是好友列表字段，用来序列化和反序列化每个用户的好友列表
+{
+	repeated uint64 FriendUid = 1;	//好友Uid
+}
+
+enum CSChatCmd
+{
+	//游戏服务器发给聊天服务器的
+	CSMsgServer_RegisterSuccess = 1;			//聊天服务器注册成功功能
+	CSMsgServer_LoginSuccess = 2;				//聊天服务器登录成功功能
+	CSMsgServer_Quit = 3;						//聊天服务器用户离线功能
+	
+	//聊天服务器与客户端交互
+	
+	CSMsgServer_FriendLine = 4;					//好友上线通知功能
+	CSMsgServer_AskAddFriend = 5;				//请求添加好友
+	CSMsgServer_SuccessAddFriend = 6;			//成功添加对方为好友
+	CSMsgServer_DeleteFriend = 7;				//删除好友功能
+	CSMsgServer_SendChat = 8;					//好友发送聊天
+	CSMsgServer_FindName = 9;					//查找用户
+	CSMsgServer_ChangeStatus = 10;				//玩家某个状态发生改变(等级，头像，聊天框，vip,段位，状态) 统一使用该协议（游戏服务器主动通知聊天服务器)							  				
+}
+
+
+message CSMsgRegisterSuccessReq				//聊天服务器注册成功功能
+{
+	optional uint64 uid = 1;
+	optional string name = 2;				//名称
+}
+
+message CSMsgLoginSuccessReq				//聊天服务器登录成功功能
+{
+	optional uint64 uid = 1;				
+}
+
+message CSMsgQuitReq						//聊天服务器用户离线（退出）
+{
+	optional uint64 uid = 1;				
+}
+
+message CSMsgRoleInfo							//用户的基本信息
+{
+	optional uint64 Uid = 1;
+	optional uint32 Grade = 2;
+	optional uint32 Rank = 3;
+	optional uint32 Status = 4;
+	optional uint32 Vip = 5;
+	optional uint32 Head = 6;
+	optional uint32 ChatFrame = 7;
+	optional string Name = 8;
+}
+
+message CSMsgRoleInfoList
+{
+	repeated CSMsgRoleInfo RoleInfo = 1;
+}
+
+message CSMsgLoginSuccessRsp				//用户登录成功时就会发送所有好友列表数据(聊天服务器主动发送给客户端)
+{
+	optional CSMsgRoleInfoList FriendList = 1;
+}
+
+message CSMsgAskAddFriendReq			//请求添加好友功能
+{
+	optional string Name = 1;			//本用户的名称
+	optional uint64 Uid = 2;			//添加对象的Uid
+}
+
+message CSMsgAskAddFriendRsp			//请求添加好友功能
+{
+	optional uint64 Uid = 1;			//对方的Uid
+	optional string FriendName = 2;		//对方的名称
+}
+
+message CSMsgSuccessAddFriendReq		//成功添加好友
+{
+	optional uint64 Uid1 = 1;
+	optional uint64 Uid2 = 2;
+}
+
+message CSMsgSuccessAddFriendRsp		//成功添加好友
+{
+	optional CSMsgRoleInfo FriendRoleInfo = 1;
+}
+
+message CSMsgDeleteFriendReq			//删除好友功能
+{
+	optional uint64 Uid1 = 1;
+	optional uint64 Uid2 = 2;
+}
+
+message CSMsgDeleteFriendRsp			//删除好友功能
+{
+	optional uint64 Uid = 1;			//从好友列表中移除一个好友
+}
+
+message CSMsgSendChatReq				//发送好友聊天
+{
+	optional uint64 Uid1 = 1;			//用户UID
+	optional uint64 Uid2 = 2;			//好友UID
+	optional string information = 3;	//消息内容
+}
+
+message CSMsgSendChatRsp				//收好友聊天内容
+{
+	optional uint64 Uid = 1;			//好友UID
+	optional string information = 2;	//消息内容
+}
+
+message CSMsgFindNameReq				//查找用户
+{
+	optional string name = 1;
+}
+
+message CSMsgFindNameRsp				//查找用户
+{
+	optional CSMsgRoleInfo RoleInfo = 1;
+}
+
+message CSMsgChangeStatusReq		//用户状态改变
+{
+	optional uint32 type = 1;		//改变状态的ID号范围为 1 - 6，每个数值对应某个状态的执行
+	optional uint32 value = 2;		//更改为该数值
+	optional uint64 Uid = 3;		//该用户唯一UID
+}
+
+message CSMsgChangeStatusRsp		//用户状态改变
+{
+	optional CSMsgRoleInfo RoleInfo = 1;
+}
+
+message CSChatReqParam
+{
+	optional CSMsgRegisterSuccessReq RegisterSuccessReq = 1;
+	optional CSMsgLoginSuccessReq LoginSuccessReq = 2;
+	optional CSMsgQuitReq MsgQuitReq = 3;
+	optional CSMsgAskAddFriendReq AskAddFriendReq = 4;
+	optional CSMsgSuccessAddFriendReq SuccessAddFriendReq = 5;
+	optional CSMsgDeleteFriendReq DeleteFriendReq = 6;
+	optional CSMsgSendChatReq SendChatReq  = 7;
+	optional CSMsgFindNameReq FindNameReq = 8;
+	optional CSMsgChangeStatusReq ChangeStatusReq = 9;
+}
+
+
+message CSChatRspParam
+{
+	optional CSMsgLoginSuccessRsp MsgLoginSuccess = 1;
+	optional CSMsgRoleInfo RoleInfo = 2;				//用户的基本信息，上线了就要广播给你上线的好友
+	optional CSMsgRoleInfo RoleQuit = 3;				//用户的基本信息，离线了就要广播给你上线的好友
+	optional CSMsgAskAddFriendRsp AskAddFriendRsp = 4;	
+	optional CSMsgSuccessAddFriendRsp SuccessAddFriendRsp = 5;
+	optional CSMsgDeleteFriendRsp DeleteFriendRsp = 6;
+	optional CSMsgSendChatRsp SendChatRsp = 7;
+	optional CSMsgFindNameRsp FindNameRsp = 8;
+	optional CSMsgChangeStatusRsp ChangeStatusRsp = 9;
+}
+
+message CSChatReq
+{
+	required CSChatCmd cmd = 1 ;
+	optional CSChatReqParam reqParam = 2;
+}
+
+message CSChatRsp
+{
+	optional int32 result = 1 ;								
+	required CSChatCmd cmd = 2 ;
+	optional CSChatRspParam  rspParam = 3 ;
+}
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////聊天模块//////////////////////////////////////////////////////////////////////
+
+
+
+
+enum CSMsgID
+{
+	//填写模块的ID号
+	
+	CS_MSGID_MIN = 0;
+	
+	CS_MSGID_RegisterLogin = 1; 							//注册登录模块的模块ID号
+	
+	CS_MSGID_BAG = 2;										//背包模块
+	
+	CS_MSGID_DecorateBAG = 3;								//装饰背包模块	
+
+	CS_MSGID_Chat = 4;										//聊天模块	
+	
+	//如果还有别的模块就这里进行扩展
+	
+	CS_MSGID_MAX = 5;
+} 
+
+message CSMsgBody
+{
+	//把每个模块的数据结构添加到这里(每增加一个模块就要添加 ...Req 和 ..Rsp两个结构
+	
+	optional CSRegisterLoginReq RegisterLoginReq = 1;
+	optional CSRegisterLoginRsp RegisterLoginRsp = 2;
+	
+	optional CSBagReq BagReq = 3;
+	optional CSBagRsp BagRsp = 4;
+	
+	optional CSDecorateBagReq DecorateBagReq = 5;
+	optional CSDecorateBagRsp DecorateBagRsp = 6;
+	
+	optional CSChatReq ChatReq = 7;
+	optional CSChatRsp ChatRsp = 8;
+}
+
+
+
+message CSMsgHead
+{
+	required uint64 uid = 1;      							//唯一uid
+	required CSMsgID msgID = 2;   							//每个模块都有自己的ID号
+}
+
+
+
+message CSMsg   //总的数据包（发送出去的数据包）
+{
+	required CSMsgHead head = 1;   							//头部，这个是固定的
+	required CSMsgBody body = 2;							//传递的数据保存在这里
+}
+
+
